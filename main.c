@@ -7,6 +7,8 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 int const FCFS = 1;
 int const SJF = 2;
@@ -66,7 +68,7 @@ void sortProcessesByArrivalTime(struct Process* processes, int numberOfProcesses
 }
 
  void display(struct Process processes[10], int numberOfProcesses){   
-    printf("AT\tBT\tTaT\tWT\n");  
+    printf("PID\tAT\tBT\tTaT\tWT\n");  
     for(int i = 0; i < numberOfProcesses; i++) {  
         printf("%d\t%3d\t%3d\t%3d\t%3d\n",
         processes[i].processId,
@@ -164,8 +166,37 @@ void manualInput(int algorithm) {
 }
 
 void inputFromFile(int algorithm) {
+    char fileName[64];
+    printf("Enter the path to your file: ");
+     scanf("%s", fileName);
+    /*File validation?*/
+    
+    FILE *file = fopen(fileName, "r");
+    
+    int line = 0;
+    char input[64];
+    
+    while(fgets(input, 64, file)) {
+        if (line == 0) {
+            /*Skips the headings.*/
+            line++;
+            continue;
+        }
+        
+        line++;
+        
+        /* strtok() splits the line of the file by the delimiter,
+         * atoi() then converts this into an integer. */
+        int pid = atoi(strtok(input, "\t  "));
+        int at = atoi(strtok(NULL, " \t"));
+        int bt = atoi(strtok(NULL, "\t"));
+        
+        printf("PID: %d \n", pid);
+        printf("AT: %d \n", at);
+        printf("BT: %d \n", bt);
+    }
+        
 }
-
 int main(int argc, char **argv) {
     int algorithm = algorithmSelection();
     int processInputSelection = processSelection();
