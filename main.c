@@ -4,11 +4,10 @@
  * @author George Barker
  * 
  */
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 int const FCFS = 1;
 int const SJF = 2;
@@ -177,24 +176,27 @@ void inputFromFile(int algorithm) {
     char input[64];
     
     while(fgets(input, 64, file)) {
-        if (line == 0) {
-            /*Skips the headings.*/
-            line++;
+        printf("Input: %s", input);
+        /* Skips the headings, and any blank lines.*/
+        if (!isdigit(input[0])) {
             continue;
         }
         
         line++;
         
         /* strtok() splits the line of the file by the delimiter,
-         * atoi() then converts this into an integer. */
+         * atoi() then converts this into an integer. 
         int pid = atoi(strtok(input, "\t  "));
         int at = atoi(strtok(NULL, " \t"));
         int bt = atoi(strtok(NULL, "\t"));
         
-        printf("PID: %d \n", pid);
-        printf("AT: %d \n", at);
-        printf("BT: %d \n", bt);
+        printf("PID: %d, ", pid);
+        printf("AT: %d, ", at);
+        printf("BT: %d \n", bt);*/
+        
     }
+    
+    printf("Number of lines: %d", line);
         
 }
 int main(int argc, char **argv) {
