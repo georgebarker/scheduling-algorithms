@@ -117,21 +117,16 @@ struct Process constructProcess(int pid, int at, int bt) {
 	return process;
 }
 
-void performAlgorithm(struct Process processes[10], int numberOfProcesses,
-		int algorithm) {
-	switch (algorithm) {
-	case FCFS:
-		firstComeFirstServed(processes, numberOfProcesses);
-		break;
-	case SJF:
-		shortestJobFirst(processes, numberOfProcesses);
-		break;
-	case RR:
-		roundRobin(processes, numberOfProcesses);
-		break;
-	default:
+void performAlgorithm(struct Process processes[10], int numberOfProcesses, int algorithm) {
+	if (algorithm == FCFS) {
+        firstComeFirstServed(processes, numberOfProcesses);
+    } else if (algorithm == SJF) {
+        shortestJobFirst(processes, numberOfProcesses);
+    } else if (algorithm == RR) {
+        roundRobin(processes, numberOfProcesses);
+    } else {
 		printf("Wrong algorithm!");
-	}
+    }
 }
 
 void manualInput(int algorithm) {
@@ -203,17 +198,15 @@ int main(int argc, char **argv) {
 	int algorithm = algorithmSelection();
 	int processInputSelection = processSelection();
 
-	switch (processInputSelection) {
-	case MANUAL_INPUT:
-		manualInput(algorithm);
-		break;
-	case INPUT_FROM_FILE:
-		inputFromFile(algorithm);
-		break;
-	default:
-		printf("Wrong input chosen!");
-	}
-
+    if (processInputSelection == MANUAL_INPUT) {
+        manualInput(algorithm);
+    } else if (processInputSelection == INPUT_FROM_FILE) {
+        inputFromFile(algorithm);
+    } else {
+        printf("Wrong input chosen!");
+    }
+        
 	return 0;
 }
+
 
