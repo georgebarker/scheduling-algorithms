@@ -168,7 +168,6 @@ void inputFromFile(int algorithm) {
     char fileName[64];
     printf("Enter the path to your file: ");
      scanf("%s", fileName);
-    /*File validation?*/
     
     FILE *file = fopen(fileName, "r");
     
@@ -177,7 +176,7 @@ void inputFromFile(int algorithm) {
     
     while(fgets(input, 64, file)) {
         printf("Input: %s", input);
-        /* Skips the headings, and any blank lines.*/
+        /* Skips any headings or blank lines.*/
         if (!isdigit(input[0])) {
             continue;
         }
@@ -185,19 +184,18 @@ void inputFromFile(int algorithm) {
         line++;
         
         /* strtok() splits the line of the file by the delimiter,
-         * atoi() then converts this into an integer. 
-        int pid = atoi(strtok(input, "\t  "));
-        int at = atoi(strtok(NULL, " \t"));
-        int bt = atoi(strtok(NULL, "\t"));
+          atoi() then converts this into an integer. */
+        int pid = atoi(strtok(input, ","));
+        int at = atoi(strtok(NULL, ","));
+        int bt = atoi(strtok(NULL, ","));
         
         printf("PID: %d, ", pid);
         printf("AT: %d, ", at);
-        printf("BT: %d \n", bt);*/
+        printf("BT: %d \n", bt);
         
     }
     
     printf("Number of lines: %d", line);
-        
 }
 int main(int argc, char **argv) {
     int algorithm = algorithmSelection();
