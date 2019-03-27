@@ -44,7 +44,7 @@ int processSelection() {
 	int selection;
 	printf("How do you want to enter your processes?\n\n"
 			"1. Enter processes manually\n"
-			"2. Use processes from a text file\n"
+			"2. Use processes from a CSV file\n"
 			"3. Exit\n\n"
 			"Enter a selection: ");
 
@@ -165,19 +165,31 @@ bool isEmpty(char *text) {
 }
 
 void inputFromFile(int algorithm) {
+	struct Process processes[10];
 	char fileName[64];
-	printf("Enter the path to your file: ");
+	printf("Enter the path to your CSV file (e.g. Assignment-Datasets-CSV/dataset1.csv): ");
 	scanf("%s", fileName);
-
 	FILE *file = fopen(fileName, "r");
-
-    char line[1024];
-    while (fgets(line, 1024, file)) {
-        char* tmp = strdup(line);
-        printf("%s", tmp);
-        free(tmp);
-        
+	char line[64];
+	int count = 0;
+	while (fgets(line, sizeof(line), file)) {
+        if (isEmpty(line)) {
+            continue;
+        }
+		/* strtok() splits the line of the file by the delimiter,
+		 atoi() then converts this into an integer. */
+         
+		int pid = atoi(strtok(line, ","));
+		int at = atoi(strtok(NULL, ","));
+		int bt = atoi(strtok(NULL, ","));
+		
+		struct Process process = constructProcess(pid, at, bt);
+		processes[count] = process;
+		count++;
+		
     }
+	
+	performAlgorithm(processes, count, algorithm);
 }
 
 int main(int argc, char **argv) {
