@@ -161,7 +161,7 @@ void manualInput(int algorithm) {
 }
 
 bool isEmpty(char *text) {
-    return strlen(text) == 1;
+    return strlen(text) <= 1;
 }
 
 void inputFromFile(int algorithm) {
@@ -171,27 +171,13 @@ void inputFromFile(int algorithm) {
 
 	FILE *file = fopen(fileName, "r");
 
-	char line[64];
-
-	while (fgets(line, sizeof(line), file)) {
-        if (isEmpty(line)) {
-            continue;
-        }
-
-		/* strtok() splits the line of the file by the delimiter,
-		 atoi() then converts this into an integer. */
-         
-		int pid = atoi(strtok(line, ","));
-		int at = atoi(strtok(NULL, ","));
-		int bt = atoi(strtok(NULL, ","));
-
-		printf("PID: %d, ", pid);
-		printf("AT: %d, ", at);
-		printf("BT: %d \n", bt);
-
+    char line[1024];
+    while (fgets(line, 1024, file)) {
+        char* tmp = strdup(line);
+        printf("%s", tmp);
+        free(tmp);
+        
     }
-
-	printf("Hit!");
 }
 
 int main(int argc, char **argv) {
