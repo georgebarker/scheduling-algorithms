@@ -18,6 +18,7 @@ int const INPUT_FROM_FILE = 2;
 
 typedef enum { false, true } bool;
 
+int totalBurstTime;
 float averageWaitTime, averageTurnAroundTime;
 
 struct Process {
@@ -26,6 +27,7 @@ struct Process {
 	int burstTime;
 	int turnAroundTime;
 	int waitTime;
+	int completionTime;
 };
 
 int algorithmSelection() {
@@ -66,6 +68,20 @@ void sortProcessesByArrivalTime(struct Process* processes,
 	}
 }
 
+void sortProcessesByBurstTime(struct Process* processes,
+		int numberOfProcesses) {
+	int j, i;
+	for (i = 1; i < numberOfProcesses; i++) {
+		for (j = 0; j < numberOfProcesses - i; j++) {
+			if (processes[j].burstTime > processes[j + 1].burstTime) {
+				struct Process temp = processes[j];
+				processes[j] = processes[j + 1];
+				processes[j + 1] = temp;
+			}
+		}
+	}
+}
+
 void display(struct Process processes[10], int numberOfProcesses) {
 	printf("PID\tAT\tBT\tTaT\tWT\n");
 	for (int i = 0; i < numberOfProcesses; i++) {
@@ -74,7 +90,7 @@ void display(struct Process processes[10], int numberOfProcesses) {
 				processes[i].turnAroundTime, processes[i].waitTime);
 	}
 
-	printf("Average Turn Around Time: %f\nAverage WaitTime:%f\n",
+	printf("Average Turn Around Time: %f\nAverage Wait Time: %f\n",
 			averageTurnAroundTime, averageWaitTime);
 }
 
@@ -84,7 +100,7 @@ void firstComeFirstServed(struct Process processes[10], int numberOfProcesses) {
 	processes[0].waitTime = 0;
 	averageTurnAroundTime = processes[0].turnAroundTime =
 			processes[0].burstTime;
-	int totalBurstTime = processes[0].burstTime;
+	totalBurstTime = processes[0].burstTime;
 
 	for (int i = 1; i < numberOfProcesses; i++) {
 		processes[i].waitTime = totalBurstTime - processes[i].arrivalTime;
@@ -101,7 +117,46 @@ void firstComeFirstServed(struct Process processes[10], int numberOfProcesses) {
 }
 
 void shortestJobFirst(struct Process processes[10], int numberOfProcesses) {
-	printf("Hit sjf!");
+	sortProcessesByArrivalTime(processes, numberOfProcesses);
+	processes[0].waitTime = 0;
+	processes[0].completionTime = processes[0].burstTime + processes[0].arrivalTime;
+	averageTurnAroundTime = processes[0].turnAroundTime = processes[0].completionTime - processes[0].arrivalTime;
+	averageWaitTime = processes[0].waitTime = processes[0].turnAroundTime - processes[0].burstTime;
+	totalBurstTime = processes[0].burstTime;
+	
+	
+	struct Process processesWithoutFirst[numberOfProcesses - 1];
+	for (int i = 0; i < numberOfProcesses - 1; i++) {
+		processesWithoutFirst[i] = processes[i + 1];
+	}
+	
+	sortProcessesByBurstTime(processesWithoutFirst, numberOfProcesses - 1);
+	
+	struct Process sortedByBurstWithFirst[numberOfProcesses];
+	sortedByBurstWithFirst[0] = processes[0];
+	
+	
+	for (int i = 1; i <= numberOfProcesses; i++) {
+		sortedByBurstWithFirst[i] = processesWithoutFirst[i - 1];
+	}
+	
+	for (int i = 1; i <= numberOfProcesses; i++) {
+		if (sortedByBurstWithFirst[i].arrivalTime > sortedByBurstWithFirst[i - 1].completionTime) {
+			
+			struct Process notArrivedYet = sortedByBurstWithFirst[i];
+			
+		}
+		sortedByBurstWithFirst[i].completionTime = sortedByBurstWithFirst[i - 1].completionTime + sortedByBurstWithFirst[i].burstTime;
+		sortedByBurstWithFirst[i].turnAroundTime = sortedByBurstWithFirst[i].completionTime - sortedByBurstWithFirst[i].arrivalTime;
+		sortedByBurstWithFirst[i].waitTime = sortedByBurstWithFirst[i].turnAroundTime - sortedByBurstWithFirst[i].burstTime;
+		averageTurnAroundTime += sortedByBurstWithFirst[i].turnAroundTime;
+		averageWaitTime += sortedByBurstWithFirst[i].waitTime;
+	}
+
+	averageTurnAroundTime /= numberOfProcesses;
+	averageWaitTime /= numberOfProcesses;
+	
+	display(sortedByBurstWithFirst, numberOfProcesses);
 }
 
 void roundRobin(struct Process processes[10], int numberOfProcesses) {
@@ -178,7 +233,6 @@ void inputFromFile(int algorithm) {
         }
 		/* strtok() splits the line of the file by the delimiter,
 		 atoi() then converts this into an integer. */
-         
 		int pid = atoi(strtok(line, ","));
 		int at = atoi(strtok(NULL, ","));
 		int bt = atoi(strtok(NULL, ","));
