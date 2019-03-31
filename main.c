@@ -16,6 +16,8 @@ int const RR = 3;
 int const MANUAL_INPUT = 1;
 int const INPUT_FROM_FILE = 2;
 
+int const MAX_INT = 100; //changeme
+
 typedef enum { false, true } bool;
 
 int totalBurstTime;
@@ -28,6 +30,7 @@ struct Process {
     int turnAroundTime;
     int waitTime;
     int completionTime;
+    int remainingBurstTime;
 };
 
 int algorithmSelection() {
@@ -160,8 +163,88 @@ void shortestJobFirst(struct Process processes[10], int numberOfProcesses) {
     display(sortedByBurstWithFirst, numberOfProcesses);
 }
 
+bool isAlreadyOnQueue(struct Process *readyQueue[MAX_INT], struct Process processToEvaluate, int readyQueuePosition, int readyQueueSize) {
+	if (readyQueueSize == 0) {
+		return false;
+	}
+	
+	for (int i = readyQueuePosition; i <= readyQueueSize; i++) {
+		if (readyQueue[i]->processId == processToEvaluate.processId) {
+			return true;
+		}
+	}
+	
+	printf("PID %d isn't in the queue, RQP: %d, RQS %d\n", processToEvaluate.processId, readyQueuePosition, readyQueueSize);
+	return false;
+}
+
 void roundRobin(struct Process processes[10], int numberOfProcesses) {
-    printf("Hit RR!");
+	int timeQuantum = 2; //scanf();
+	int completedProcesses = 0;
+	int currentTime = 0;
+
+	int readyQueuePosition = 0;
+	int readyQueueSize = 0;
+	struct Process *readyQueue[MAX_INT];
+	readyQueue[0] = &processes[0];
+	  
+	while (completedProcesses != numberOfProcesses) {
+		if (timeQuantum < readyQueue[readyQueuePosition]->remainingBurstTime) {
+			currentTime = currentTime + timeQuantum;
+			readyQueue[readyQueuePosition]->remainingBurstTime =- timeQuantum;
+		} else if (timeQuantum == readyQueue[readyQueuePosition]->remainingBurstTime) {
+			currentTime = currentTime + timeQuantum;
+			readyQueue[readyQueuePosition]->remainingBurstTime = 0;
+			readyQueue[readyQueuePosition]->completionTime = currentTime;
+		} else if (timeQuantum > readyQueue[readyQueuePosition]->remainingBurstTime) {
+			int difference = timeQuantum - readyQueue[readyQueuePosition]->remainingBurstTime;
+			currentTime = currentTime + difference;
+			readyQueue[readyQueuePosition]->remainingBurstTime = 0;
+			readyQueue[readyQueuePosition]->completionTime = currentTime;
+		}
+
+		if (readyQueue[readyQueuePosition]->remainingBurstTime == 0) {
+			printf("Completed PID: %d!\n", readyQueue[readyQueuePosition]->processId);
+			completedProcesses++;
+			readyQueue[readyQueuePosition]->turnAroundTime = readyQueue[readyQueuePosition]->completionTime - readyQueue[readyQueuePosition]->arrivalTime;
+			readyQueue[readyQueuePosition]->waitTime = readyQueue[readyQueuePosition]->turnAroundTime - readyQueue[readyQueuePosition]->burstTime;
+			
+			//averages...
+		}
+			
+		//Put the next available processES on the queue
+		for (int j = 0; j <= numberOfProcesses; j++) {
+			if (processes[j].arrivalTime <= currentTime 
+				&& processes[j].remainingBurstTime != 0 
+				&& processes[j].processId != readyQueue[readyQueuePosition]->processId
+				&& !isAlreadyOnQueue(readyQueue, processes[j], readyQueuePosition, readyQueueSize)
+				) {
+					printf("Adding PID: %d to the queue, RQP: %d, RQS: %d \n", processes[j].processId, readyQueuePosition, readyQueueSize);
+				readyQueue[++readyQueueSize] = &processes[j];
+			}
+		}
+
+		if (readyQueue[readyQueuePosition]->remainingBurstTime != 0) {
+			printf("Adding PID no loop: %d to the queue, RQP: %d, RQS: %d \n", readyQueue[readyQueuePosition]->processId, readyQueuePosition, readyQueueSize);
+			readyQueue[++readyQueueSize] = readyQueue[readyQueuePosition];
+		}
+
+		readyQueuePosition++;
+		
+		printf("Ready queue order: \n");
+	for (int i = 0; i <= readyQueueSize; i++) {
+		printf("%d, ", readyQueue[i]->processId);
+	}
+	printf("\n\n");
+
+	}
+	
+	printf("Ready queue order: \n");
+	for (int i = 0; i <= readyQueueSize; i++) {
+		printf("%d, ", readyQueue[i]->processId);
+	}
+	
+	//display(processes, numberOfProcesses);
 }
 
 struct Process constructProcess(int pid, int at, int bt) {
@@ -169,6 +252,7 @@ struct Process constructProcess(int pid, int at, int bt) {
     process.processId = pid;
     process.arrivalTime = at;
     process.burstTime = bt;
+    process.remainingBurstTime = bt;
 
     return process;
 }
