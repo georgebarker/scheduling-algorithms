@@ -9,6 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+#include <time.h>
 
 int const FCFS = 1;
 int const SJF = 2;
@@ -85,9 +86,23 @@ void sortProcessesByBurstTime(struct Process* processes,
 }
 
 void display(struct Process processes[10], int numberOfProcesses) {
+	FILE *file;
+	char fileName[32];
+	sprintf(fileName, "scheduling-result-%d.txt", (int) time(NULL));
+	file = fopen(fileName, "w+");
+	
     printf("PID\tAT\tBT\tCT\tTaT\tWT\n");
+    fprintf(file, "PID\tAT\tBT\tCT\tTaT\tWT\n");
     for (int i = 0; i < numberOfProcesses; i++) {
         printf("%d\t%3d\t%3d\t%3d\t%3d\t%3d\n", 
+        processes[i].processId,
+        processes[i].arrivalTime,
+        processes[i].burstTime,
+        processes[i].completionTime,
+        processes[i].turnAroundTime,
+        processes[i].waitTime);
+        
+        fprintf(file, "%d\t%3d\t%3d\t%3d\t%3d\t%3d\n",
         processes[i].processId,
         processes[i].arrivalTime,
         processes[i].burstTime,
@@ -98,17 +113,26 @@ void display(struct Process processes[10], int numberOfProcesses) {
 
     printf("Average Turn Around Time: %.2f\nAverage Wait Time: %.2f\n",
             averageTurnAroundTime, averageWaitTime);
+	fprintf(file, "Average Turn Around Time: %.2f\nAverage Wait Time: %.2f\n",
+            averageTurnAroundTime, averageWaitTime);
+            
+	fclose(file);
+    
+    printf("The result has been outputted to the current working directory.\nFile name: %s", fileName);
+    
 }
 
 void firstComeFirstServed(struct Process processes[10], int numberOfProcesses) {
     sortProcessesByArrivalTime(processes, numberOfProcesses);
 
     processes[0].waitTime = 0;
+    processes[0].completionTime = processes[0].arrivalTime + processes[0].burstTime;
     averageTurnAroundTime = processes[0].turnAroundTime =
             processes[0].burstTime;
     totalBurstTime = processes[0].burstTime;
 
     for (int i = 1; i < numberOfProcesses; i++) {
+		processes[i].completionTime = processes[i - 1].completionTime + processes[i].burstTime;
         processes[i].waitTime = totalBurstTime - processes[i].arrivalTime;
         totalBurstTime += processes[i].burstTime;
         averageWaitTime += processes[i].waitTime;
@@ -243,10 +267,6 @@ void roundRobin(struct Process processes[10], int numberOfProcesses) {
 	averageTurnAroundTime /= numberOfProcesses;
     averageWaitTime /= numberOfProcesses;
 	display(processes, numberOfProcesses);
-	printf("\nReady queue order: \n");
-	for (int i = 0; i <= readyQueueSize; i++) {
-		printf("%d : ", readyQueue[i]->processId);
-	}
 }
 
 struct Process constructProcess(int pid, int at, int bt) {
