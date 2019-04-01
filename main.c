@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 
 int const FCFS = 1;
 int const SJF = 2;
@@ -15,8 +16,6 @@ int const RR = 3;
 
 int const MANUAL_INPUT = 1;
 int const INPUT_FROM_FILE = 2;
-
-int const MAX_INT = 100; //changeme
 
 typedef enum { false, true } bool;
 
@@ -167,7 +166,7 @@ void shortestJobFirst(struct Process processes[10], int numberOfProcesses) {
     display(sortedByBurstWithFirst, numberOfProcesses);
 }
 
-bool isAlreadyOnQueue(struct Process *readyQueue[MAX_INT], struct Process *processToEvaluate, int readyQueuePosition, int readyQueueSize) {
+bool isAlreadyOnQueue(struct Process *readyQueue[INT_MAX], struct Process *processToEvaluate, int readyQueuePosition, int readyQueueSize) {
 	if (readyQueueSize == 0) {
 		return false;
 	}
@@ -180,56 +179,25 @@ bool isAlreadyOnQueue(struct Process *readyQueue[MAX_INT], struct Process *proce
 	return false;
 }
 
-void shortestJobFirst2(struct Process processes[10], int numberOfProcesses) {
-	int currentTime = 0;
-	int completedProcesses = 0;
-	
-	int readyQueuePosition = 0;
-	int readyQueueSize = 0;
-	
-	struct Process *readyQueue[MAX_INT];
-	sortProcessesByBurstTime(processes, numberOfProcesses);
-	
-	while (completedProcesses != numberOfProcesses) {
-		//Put the next available processes on the queue
-		for (int i = 0; i <= numberOfProcesses - 1; i++) {
-			if (processes[i].arrivalTime <= currentTime
-				&& !isAlreadyOnQueue(readyQueue, &processes[i], 0, readyQueueSize)) {
-				readyQueue[readyQueueSize++] = &processes[i];
-			}
-			
-			if (readyQueueSize == 0) {
-				currentTime++;
-			}
-		}
-
-		//errors around here
-		currentTime = currentTime + readyQueue[readyQueuePosition]->burstTime;
-		readyQueue[readyQueuePosition]->completionTime = currentTime;
-		readyQueue[readyQueuePosition]->turnAroundTime = readyQueue[readyQueuePosition]->completionTime - readyQueue[readyQueuePosition]->arrivalTime;
-		readyQueue[readyQueuePosition]->waitTime = readyQueue[readyQueuePosition]->turnAroundTime - readyQueue[readyQueuePosition]->burstTime;
-			
-		averageTurnAroundTime += readyQueue[readyQueuePosition]->turnAroundTime;
-		averageWaitTime += readyQueue[readyQueuePosition]->waitTime;
-		
-		completedProcesses++;
-	}
-	
-	averageTurnAroundTime /= numberOfProcesses;
-    averageWaitTime /= numberOfProcesses;
-	
-	display(processes, numberOfProcesses);
-}
-
 void roundRobin(struct Process processes[10], int numberOfProcesses) {
-	//order by arrival time!!!
-	int timeQuantum = 2; //scanf();
+	sortProcessesByArrivalTime(processes, numberOfProcesses);
+	
+	int timeQuantum = 0;
+	
+	printf("Enter a Time Quantum (TQ): ");
+    scanf("%d", &timeQuantum);
+    
+    if (timeQuantum <= 0) {
+		printf("TQ is not valid, must be above 0!");
+		return;
+	}
+        
 	int completedProcesses = 0;
 	int currentTime = 0;
 
 	int readyQueuePosition = 0;
 	int readyQueueSize = 0;
-	struct Process *readyQueue[MAX_INT];
+	struct Process *readyQueue[INT_MAX];
 	readyQueue[0] = &processes[0];
 	  
 	while (completedProcesses != numberOfProcesses) {
@@ -295,7 +263,7 @@ void performAlgorithm(struct Process processes[10], int numberOfProcesses, int a
     if (algorithm == FCFS) {
         firstComeFirstServed(processes, numberOfProcesses);
     } else if (algorithm == SJF) {
-        shortestJobFirst2(processes, numberOfProcesses);
+        shortestJobFirst(processes, numberOfProcesses);
     } else if (algorithm == RR) {
         roundRobin(processes, numberOfProcesses);
     } else {
