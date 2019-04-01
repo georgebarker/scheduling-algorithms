@@ -260,6 +260,8 @@ bool isAlreadyOnQueue(struct Process *readyQueue[100], struct Process *processTo
 }
 
 void roundRobin(struct Process processes[10], int numberOfProcesses) {
+	sortProcessesByArrivalTime(processes, numberOfProcesses);
+	
 	//In Round Robin, a Time Quantum is needed, which is the equal time that each process will be allocated to do work.
 	//Time Quantums must be a postive number.
 	int timeQuantum = 0;
