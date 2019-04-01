@@ -180,7 +180,49 @@ bool isAlreadyOnQueue(struct Process *readyQueue[MAX_INT], struct Process *proce
 	return false;
 }
 
+void shortestJobFirst2(struct Process processes[10], int numberOfProcesses) {
+	int currentTime = 0;
+	int completedProcesses = 0;
+	
+	int readyQueuePosition = 0;
+	int readyQueueSize = 0;
+	
+	struct Process *readyQueue[MAX_INT];
+	sortProcessesByBurstTime(processes, numberOfProcesses);
+	
+	while (completedProcesses != numberOfProcesses) {
+		//Put the next available processes on the queue
+		for (int i = 0; i <= numberOfProcesses - 1; i++) {
+			if (processes[i].arrivalTime <= currentTime
+				&& !isAlreadyOnQueue(readyQueue, &processes[i], 0, readyQueueSize)) {
+				readyQueue[readyQueueSize++] = &processes[i];
+			}
+			
+			if (readyQueueSize == 0) {
+				currentTime++;
+			}
+		}
+
+		//errors around here
+		currentTime = currentTime + readyQueue[readyQueuePosition]->burstTime;
+		readyQueue[readyQueuePosition]->completionTime = currentTime;
+		readyQueue[readyQueuePosition]->turnAroundTime = readyQueue[readyQueuePosition]->completionTime - readyQueue[readyQueuePosition]->arrivalTime;
+		readyQueue[readyQueuePosition]->waitTime = readyQueue[readyQueuePosition]->turnAroundTime - readyQueue[readyQueuePosition]->burstTime;
+			
+		averageTurnAroundTime += readyQueue[readyQueuePosition]->turnAroundTime;
+		averageWaitTime += readyQueue[readyQueuePosition]->waitTime;
+		
+		completedProcesses++;
+	}
+	
+	averageTurnAroundTime /= numberOfProcesses;
+    averageWaitTime /= numberOfProcesses;
+	
+	display(processes, numberOfProcesses);
+}
+
 void roundRobin(struct Process processes[10], int numberOfProcesses) {
+	//order by arrival time!!!
 	int timeQuantum = 2; //scanf();
 	int completedProcesses = 0;
 	int currentTime = 0;
@@ -253,7 +295,7 @@ void performAlgorithm(struct Process processes[10], int numberOfProcesses, int a
     if (algorithm == FCFS) {
         firstComeFirstServed(processes, numberOfProcesses);
     } else if (algorithm == SJF) {
-        shortestJobFirst(processes, numberOfProcesses);
+        shortestJobFirst2(processes, numberOfProcesses);
     } else if (algorithm == RR) {
         roundRobin(processes, numberOfProcesses);
     } else {
