@@ -17,11 +17,19 @@ int const RR = 3;
 int const MANUAL_INPUT = 1;
 int const INPUT_FROM_FILE = 2;
 
+// Boolean type is not always available in every version of C, so it has been defined here.
 typedef enum { false, true } bool;
 
+
+//Some variables that are used by all algorithms, and so can be global.
 int totalBurstTime;
 float averageWaitTime, averageTurnAroundTime;
 
+/*
+A struct that models a Process has been used to make the code more readable,
+as oposed to using multiple arrays. Full names have been given to all the properties,
+to ensure that the reader knows exactly what the properties mean. (i.e., processId instead of PID).
+*/
 struct Process {
     int processId;
     int arrivalTime;
@@ -32,6 +40,9 @@ struct Process {
     int remainingBurstTime;
 };
 
+/*
+This method is used to cleanly retrieve the algorithm the user wishes to perform.
+*/
 int algorithmSelection() {
     int selection;
     printf("Welcome to the scheduling algorithm program.\n"
@@ -44,6 +55,10 @@ int algorithmSelection() {
     return selection;
 }
 
+/*
+This method is used to cleanly retrieve the way in which the user wants to enter their processes;
+either manually on the CLI or from a CSV file.
+*/
 int processSelection() {
     int selection;
     printf("How do you want to enter your processes?\n\n"
@@ -56,6 +71,10 @@ int processSelection() {
     return selection;
 
 }
+
+/*
+A utility method to sort an array of Processes by their arrival time in ascending order.
+*/
 void sortProcessesByArrivalTime(struct Process* processes,
         int numberOfProcesses) {
     int j, i;
@@ -70,6 +89,9 @@ void sortProcessesByArrivalTime(struct Process* processes,
     }
 }
 
+/*
+A utility method to sort an array of Processes by their burst time in ascending order.
+*/
 void sortProcessesByBurstTime(struct Process* processes,
         int numberOfProcesses) {
     int j, i;
@@ -84,6 +106,13 @@ void sortProcessesByBurstTime(struct Process* processes,
     }
 }
 
+/*
+The display method is the final step of the program;
+it takes the Processes and outputs them to the user on the screen,
+as well as creating a text file so that they can easily re-use the output.
+The file name uses the current UNIX timestamp, to avoid issues with name clashing,
+and to uniquely distinguish each file.
+*/
 void display(struct Process processes[10], int numberOfProcesses) {
 	FILE *file;
 	char fileName[32];
@@ -121,9 +150,25 @@ void display(struct Process processes[10], int numberOfProcesses) {
     
 }
 
+/*
+Advantages of FCFS:
+ 	- It is a simple algorithm
+ 	- It is easy to understand
+ 	- Suitable for batch systems
+
+Disadvantages of FCFS:
+	- It is non pre-emptive, meaning processes MUST run until they've finished.
+	- Processes that are at the back of the queue that could have processed quickly, 
+		have to wait for potentially longer processes that arrived first.
+	- It is not very efficient in terms of I/O
+	- It is not suitable for instances where it is important that each processes 
+	is given equal amounts of processing time.
+*/
 void firstComeFirstServed(struct Process processes[10], int numberOfProcesses) {
+	//Sort processes by arrival time, because we're processing them first come, first served.
     sortProcessesByArrivalTime(processes, numberOfProcesses);
 
+    //Do work on the first process.
     processes[0].waitTime = 0;
     processes[0].completionTime = processes[0].arrivalTime + processes[0].burstTime;
     averageTurnAroundTime = processes[0].turnAroundTime =
@@ -131,6 +176,7 @@ void firstComeFirstServed(struct Process processes[10], int numberOfProcesses) {
     totalBurstTime = processes[0].burstTime;
 
     for (int i = 1; i < numberOfProcesses; i++) {
+    	//We can now calculate future processes.
 		processes[i].completionTime = processes[i - 1].completionTime + processes[i].burstTime;
         processes[i].waitTime = totalBurstTime - processes[i].arrivalTime;
         totalBurstTime += processes[i].burstTime;
@@ -146,14 +192,16 @@ void firstComeFirstServed(struct Process processes[10], int numberOfProcesses) {
 }
 
 void shortestJobFirst(struct Process processes[10], int numberOfProcesses) {
+	//Sort processes by arrival time, in order to retrieve the first process.
     sortProcessesByArrivalTime(processes, numberOfProcesses);
+    //Do work on the first Process.
     processes[0].waitTime = 0;
     processes[0].completionTime = processes[0].burstTime + processes[0].arrivalTime;
     averageTurnAroundTime = processes[0].turnAroundTime = processes[0].completionTime - processes[0].arrivalTime;
     averageWaitTime = processes[0].waitTime = processes[0].turnAroundTime - processes[0].burstTime;
     totalBurstTime = processes[0].burstTime;
     
-    
+    //Now we need to get an array of Processes, but without the first, so that we can sort by Burst Time.
     struct Process processesWithoutFirst[numberOfProcesses - 1];
     for (int i = 0; i < numberOfProcesses - 1; i++) {
         processesWithoutFirst[i] = processes[i + 1];
@@ -164,18 +212,23 @@ void shortestJobFirst(struct Process processes[10], int numberOfProcesses) {
     struct Process sortedByBurstWithFirst[numberOfProcesses];
     sortedByBurstWithFirst[0] = processes[0];
     
+    //Once we've sorted By Burst Time, we can add the first arrived process back onto a new array.
     
     for (int i = 1; i <= numberOfProcesses; i++) {
         sortedByBurstWithFirst[i] = processesWithoutFirst[i - 1];
     }
     
+    //We've got the correct order we need to process in, Shortest Job First, now we can loop through and do work.
     for (int i = 1; i <= numberOfProcesses; i++) {
+    	//Check that the Process has actually arrived - if not, move it back, and pick up the next available one.
         if (sortedByBurstWithFirst[i].arrivalTime > sortedByBurstWithFirst[i - 1].completionTime) {
             struct Process notArrivedYet = sortedByBurstWithFirst[i];
             sortedByBurstWithFirst[i] = sortedByBurstWithFirst[i + 1];
             sortedByBurstWithFirst[i + 1] = notArrivedYet;
             
         }
+
+        //Do work on the process. 
         sortedByBurstWithFirst[i].completionTime = sortedByBurstWithFirst[i - 1].completionTime + sortedByBurstWithFirst[i].burstTime;
         sortedByBurstWithFirst[i].turnAroundTime = sortedByBurstWithFirst[i].completionTime - sortedByBurstWithFirst[i].arrivalTime;
         sortedByBurstWithFirst[i].waitTime = sortedByBurstWithFirst[i].turnAroundTime - sortedByBurstWithFirst[i].burstTime;
@@ -189,6 +242,10 @@ void shortestJobFirst(struct Process processes[10], int numberOfProcesses) {
     display(sortedByBurstWithFirst, numberOfProcesses);
 }
 
+/*
+This method allows the Round Robin algorithm to easily check if a process has already been added to the queue,
+to avoid it being repeatedly added when it is still waiting its  turn to be processed.
+*/
 bool isAlreadyOnQueue(struct Process *readyQueue[100], struct Process *processToEvaluate, int readyQueuePosition, int readyQueueSize) {
 	if (readyQueueSize == 0) {
 		return false;
@@ -203,6 +260,8 @@ bool isAlreadyOnQueue(struct Process *readyQueue[100], struct Process *processTo
 }
 
 void roundRobin(struct Process processes[10], int numberOfProcesses) {
+	//In Round Robin, a Time Quantum is needed, which is the equal time that each process will be allocated to do work.
+	//Time Quantums must be a postive number.
 	int timeQuantum = 0;
 	
 	printf("Enter a Time Quantum (TQ): ");
@@ -216,25 +275,31 @@ void roundRobin(struct Process processes[10], int numberOfProcesses) {
 	int completedProcesses = 0;
 	int currentTime = 0;
 
+	// A Ready Queue is established, and the first Process to arrive is added to it.
 	int readyQueuePosition = 0;
 	int readyQueueSize = 0;
 	struct Process *readyQueue[100];
 	readyQueue[0] = &processes[0];
 	  
+	//We'll loop through until all processes have been completed.
 	while (completedProcesses != numberOfProcesses) {
+		//If the Remaining Burst time is greater than the TQ, it won't have finished, so we'll take the TQ from the RBT and move on.
 		if (timeQuantum < readyQueue[readyQueuePosition]->remainingBurstTime) {
 			currentTime = currentTime + timeQuantum;
 			readyQueue[readyQueuePosition]->remainingBurstTime = readyQueue[readyQueuePosition]->remainingBurstTime - timeQuantum;
 		} else if (timeQuantum == readyQueue[readyQueuePosition]->remainingBurstTime) {
+			//If the TQ is equal to the RBT, then the process is complete. 
 			currentTime = currentTime + timeQuantum;
 			readyQueue[readyQueuePosition]->remainingBurstTime = 0;
 			readyQueue[readyQueuePosition]->completionTime = currentTime;
 		} else if (timeQuantum > readyQueue[readyQueuePosition]->remainingBurstTime) {
+			//If the TQ is greater than the RBT, the process can be completed in less time than has been allocated to it.
 			currentTime = currentTime + readyQueue[readyQueuePosition]->remainingBurstTime;
 			readyQueue[readyQueuePosition]->remainingBurstTime = 0;
 			readyQueue[readyQueuePosition]->completionTime = currentTime;
 		}
 
+		//If our process is complete, we can fill in the information on it and increment the completedProcesses variable.
 		if (readyQueue[readyQueuePosition]->remainingBurstTime == 0) {
 			completedProcesses++;
 			readyQueue[readyQueuePosition]->turnAroundTime = readyQueue[readyQueuePosition]->completionTime - readyQueue[readyQueuePosition]->arrivalTime;
@@ -254,6 +319,7 @@ void roundRobin(struct Process processes[10], int numberOfProcesses) {
 			}
 		}
 
+		//If the process we're dealing with is still not complete, it also needs adding back onto the queue.
 		if (readyQueue[readyQueuePosition]->remainingBurstTime != 0) {
 			readyQueue[++readyQueueSize] = readyQueue[readyQueuePosition];
 		}
@@ -266,6 +332,10 @@ void roundRobin(struct Process processes[10], int numberOfProcesses) {
 	display(processes, numberOfProcesses);
 }
 
+/*
+This method acts similarly to a constructor in an object-oriented programming language.
+It is used to cleanly and easily construct an instance of a Process 'struct'.
+*/
 struct Process constructProcess(int pid, int at, int bt) {
     struct Process process;
     process.processId = pid;
@@ -276,6 +346,10 @@ struct Process constructProcess(int pid, int at, int bt) {
     return process;
 }
 
+/*
+The algorithm is performed based on what the user has entered, and their input is matched against
+some pre-defined constants.
+*/
 void performAlgorithm(struct Process processes[10], int numberOfProcesses, int algorithm) {
     if (algorithm == FCFS) {
         firstComeFirstServed(processes, numberOfProcesses);
@@ -288,6 +362,9 @@ void performAlgorithm(struct Process processes[10], int numberOfProcesses, int a
     }
 }
 
+/*
+Manual input allows users to enter the data on-the-go, with ability to break from the process.
+*/
 void manualInput(int algorithm) {
     struct Process processes[10];
     int breakEntry = 1;
@@ -323,6 +400,12 @@ bool isEmpty(char *text) {
     return strlen(text) <= 1;
 }
 
+/*
+File input is via CSV, and has a maximum of ten processes for the purpose of demonstrating
+this application.
+Empty lines are skipped to avoid issues in parsing the data and not being able to construct
+a Process.
+*/
 void inputFromFile(int algorithm) {
     struct Process processes[10];
     char fileName[64];
@@ -350,6 +433,11 @@ void inputFromFile(int algorithm) {
     performAlgorithm(processes, count, algorithm);
 }
 
+/*
+The main function is where the program begins;
+it takes a user input for what algorithm the user wishes to use,
+and how they wish to enter their data.
+*/
 int main(int argc, char **argv) {
     int algorithm = algorithmSelection();
     int processInputSelection = processSelection();
