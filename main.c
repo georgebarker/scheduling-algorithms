@@ -191,6 +191,15 @@ void firstComeFirstServed(struct Process processes[10], int numberOfProcesses) {
     display(processes, numberOfProcesses);
 }
 
+/*
+Advantages of SJF:
+    - Processes with short bursts are given priority and so are run quickly.
+    - It always produces the lowest mean response time.
+
+Disadvantages of SJF:
+    - Processes that have long burst time will have to potentially wait a long time.
+    - Long burst time processes may never actually get scheduled if shorter processes continue to arrive.
+*/
 void shortestJobFirst(struct Process processes[10], int numberOfProcesses) {
 	//Sort processes by arrival time, in order to retrieve the first process.
     sortProcessesByArrivalTime(processes, numberOfProcesses);
@@ -259,6 +268,17 @@ bool isAlreadyOnQueue(struct Process *readyQueue[100], struct Process *processTo
 	return false;
 }
 
+/*
+Advantages of RR:
+    - It is pre-emptive, and is good for improving average response times to processes.
+    - By limiting the amount of time a task can run, it can be ensured that every task is ran.
+    - If the number of processes on the queue is known, we can calculate the worst case response time for a process.
+Disadvantages of RR:
+    - Processes that have a high burst time may take a long time to complete and are treated equally to those processes
+        with a low burst time, despite taking longer to complete.
+    -If the Time Quantum is too long, the processing just becomes the same as First Come First served.
+    - If the Time Quantum is too short, there will be a lot process switching which can be CPU intensive.
+*/
 void roundRobin(struct Process processes[10], int numberOfProcesses) {
 	sortProcessesByArrivalTime(processes, numberOfProcesses);
 	
