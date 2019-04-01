@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <limits.h>
 #include <time.h>
 
 int const FCFS = 1;
@@ -118,7 +117,7 @@ void display(struct Process processes[10], int numberOfProcesses) {
             
 	fclose(file);
     
-    printf("The result has been outputted to the current working directory.\nFile name: %s", fileName);
+    printf("The result has been outputted to the current working directory.\nFile name: %s\n", fileName);
     
 }
 
@@ -190,7 +189,7 @@ void shortestJobFirst(struct Process processes[10], int numberOfProcesses) {
     display(sortedByBurstWithFirst, numberOfProcesses);
 }
 
-bool isAlreadyOnQueue(struct Process *readyQueue[INT_MAX], struct Process *processToEvaluate, int readyQueuePosition, int readyQueueSize) {
+bool isAlreadyOnQueue(struct Process *readyQueue[100], struct Process *processToEvaluate, int readyQueuePosition, int readyQueueSize) {
 	if (readyQueueSize == 0) {
 		return false;
 	}
@@ -204,24 +203,22 @@ bool isAlreadyOnQueue(struct Process *readyQueue[INT_MAX], struct Process *proce
 }
 
 void roundRobin(struct Process processes[10], int numberOfProcesses) {
-	sortProcessesByArrivalTime(processes, numberOfProcesses);
-	
 	int timeQuantum = 0;
 	
 	printf("Enter a Time Quantum (TQ): ");
     scanf("%d", &timeQuantum);
     
     if (timeQuantum <= 0) {
-		printf("TQ is not valid, must be above 0!");
+		printf("Time quantum is not valid, must be a positive number!\n");
 		return;
 	}
-        
+    
 	int completedProcesses = 0;
 	int currentTime = 0;
 
 	int readyQueuePosition = 0;
 	int readyQueueSize = 0;
-	struct Process *readyQueue[INT_MAX];
+	struct Process *readyQueue[100];
 	readyQueue[0] = &processes[0];
 	  
 	while (completedProcesses != numberOfProcesses) {
@@ -287,7 +284,7 @@ void performAlgorithm(struct Process processes[10], int numberOfProcesses, int a
     } else if (algorithm == RR) {
         roundRobin(processes, numberOfProcesses);
     } else {
-        printf("Wrong algorithm!");
+        printf("Wrong algorithm!\n");
     }
 }
 
@@ -362,7 +359,7 @@ int main(int argc, char **argv) {
     } else if (processInputSelection == INPUT_FROM_FILE) {
         inputFromFile(algorithm);
     } else {
-        printf("Wrong input chosen!");
+        printf("Wrong input chosen!\n");
     }
         
     return 0;
